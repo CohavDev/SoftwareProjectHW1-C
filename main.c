@@ -24,7 +24,7 @@ typedef struct Vector Vector;
 //TODO: didnt check correctness
 int reCalcMeans(Cluster *clusterArray,int length){
     int calcMean(Cluster *clust);
-    int changed = 0;
+    int changed = 0; // "False"
     int i;
     Cluster *t;
     t = clusterArray;
@@ -40,15 +40,17 @@ int reCalcMeans(Cluster *clusterArray,int length){
 //returns 1 if changed, 0 otherwise
 int calcMean(Cluster *clust){
     int i;
-    int changed = 0;
+    int changed = 0; //"False"
     double *sum, *mean; //pointers to sum and mean of clust
+    double calcVal;
     sum = (*clust).sum;
     mean = (*clust).mean;
     for(i=0;i<(*clust).d;i++){
-        if(*mean == (*sum / (*clust).count)){
-            changed = 1;
+        calcVal = (*sum / (*clust).count);
+        if(*mean == calcVal){
+            changed = 1; //"True"
         }
-        *mean = *sum / (*clust).count;
+        *mean = calcVal;
         mean++;
         sum++;
     }
@@ -65,6 +67,7 @@ void addVector(Cluster *clust, Vector *vec){
         sum++;
         coordinates++;
     }
+    (*clust).count++;
 }
 
 //input: Array of clusters, it's length and a vector.
@@ -83,7 +86,7 @@ void findCluster(Cluster *clusterArray, Vector *vec, int arrayLen){
     tempCluster = minCluster;
     minDistance = distance((*vec).coordinates, (*minCluster).mean,(*minCluster).d);
 
-    //loop through all clusters
+    //loop through all clusters, except for 1st
     for(i = 1;i < arrayLen;i++){
         tempCluster++;
         tempDistance = distance((*vec).coordinates, (*tempCluster).mean, (*tempCluster).d);
@@ -96,6 +99,16 @@ void findCluster(Cluster *clusterArray, Vector *vec, int arrayLen){
 }
 int main() {
     //test
+    int *p = malloc(3*sizeof(int));
+    int *t;
+    int i;
+    t = p;
+    for(i=0;i<3;i++){
+        *t = 1+i;
+        t++;
+    }
+
+    printf("%d", p[1]);
 //    double *p, *g, *t;
 //    int i;
 //    p = malloc(3*sizeof(double));
@@ -122,11 +135,12 @@ int main() {
 
 //kMeans function
 void kMeans(int k, int maxIter ){
-    void printMeans(Cluster *clusterArray);
+    //TODO: Google when to declare functions (block below) and where
+    void printMeans(Cluster *clusterArray, int length);
     void initFromFile(int k, Cluster *clusterArray, Vector *vecArray);
     void findCluster(Cluster *clusterArray, Vector *vec, int arrayLen);
     void refreshClusters(Cluster *clusterArray, int clusterLength, int d);
-
+    void freeMem(Cluster *clusterArray, Vector *vecArray);
     int reCalcMeans(Cluster *clusterArray,int length);
 
     Cluster *clusterArray = NULL;
@@ -141,7 +155,7 @@ void kMeans(int k, int maxIter ){
     iterCount = 0;
     while(iterCount < maxIter && changed == 1){
         //loop through vectors and insert to clusters
-        for(i=0;i<lengthVectors;i++){
+        for(i=0;i < lengthVectors;i++){
             findCluster(clusterArray, currentVec, lengthClusters);
         }
         //recalcmeans returns 1 if mean changed, 0 otherwise
@@ -150,8 +164,9 @@ void kMeans(int k, int maxIter ){
         refreshClusters(clusterArray, lengthClusters, (*clusterArray).d);
         iterCount++;
     }
-    printMeans(clusterArray);
+    printMeans(clusterArray, lengthClusters);
     //TODO: continue from here
+    freeMem(clusterArray, vecArray);
 }
 //functions
 
@@ -191,10 +206,45 @@ void refreshClusters(Cluster *clusterArray, int clusterLength, int d){
     }
 }
 void initFromFile(int k, Cluster *clusterArray, Vector *vecArray){
-    //TODO:this should initialize vectors and clusters arrays
+    //TODO:this should initialize vectors and clusters arrays, NOT FINISHED
+    char *str = malloc(2 * sizeof(char));
+    int ch;
+    size_t size = 2;
+    size_t len = 0;
+    while((ch = getchar()) != EOF && ch != '\n'){
+        if(len == size-1){
+            str = realloc(str, 2 * size * sizeof(*str)); //double size
+            size += size;
+        }
+        str[len] = (char)ch;//continue here
+        len++;
+    }
+    str = realloc(str, sizeof(*str)*len);
+
 }
 
-void printMeans(Cluster *clusterArray){
-    //TODO:this should print all cluster's means to cmd
+void printMeans(Cluster *clusterArray, int length){
+    //TODO:didnt check
+    int i, j, d;
+    Cluster *clust;
+    double *temp;
+    clust = clusterArray;
+    d = (*clust).d;
+    //loop through clusters
+    for(i=0;i<length-1;i++){
+        temp = (*clust).mean;
+        //loop through mean array
+        for(j=0;j<d;j++){
+            printf("%.4f,", *temp);
+            temp++;
+        }
+        printf("%.4f", *temp);
+        clust++;
+    }
+}
+//deallocate memory
+void freeMem(Cluster *clusterArray, Vector *vecArray){
+    free(clusterArray);
+    free(vecArray);
 }
 
