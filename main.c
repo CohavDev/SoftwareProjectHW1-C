@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 
 struct Cluster {
@@ -32,7 +33,7 @@ void freeMem();
 
 /** main **/
 int main(int argc, char *argv[]) {
-//    printf("%s", argv[1]);
+    assert(argc == 2 || argc == 3);
     k = atoi(argv[1]);
     if(argc == 3){
         maxIter = atoi(argv[2]);
@@ -40,8 +41,8 @@ int main(int argc, char *argv[]) {
     else{
         maxIter = 200;//TODO:check default value instructions
     }
-//    printf("%d , %d",k,maxIter);
     kMeans(maxIter);
+    printf("finished !");//TODO: delete later
     return 0;
 }
 
@@ -119,8 +120,6 @@ void findCluster(double *vec) {
 
 //kMeans function
 void kMeans(int maxIter) {
-    Cluster **clusterArray = NULL;
-    double **vecArray = NULL;
     initFromFile(k, clusterArray, vecArray);
     int i, iterCount;
     double *currentVec;
@@ -185,7 +184,7 @@ void initFromFile() {
     const int LINE_MAX_LENGTH = 1000; // according to forum
     int i,j;
     for (i = 0; i < LINE_MAX_LENGTH; i++) { ;
-        if (scanf("%c", &str) == EOF || str == '\n') {
+        if (scanf("%lf%c", &number, &str) == EOF || str == '\n') {
             break; //reached end of line TODO:check if correct
         }
         if (str == ',') {
@@ -195,14 +194,17 @@ void initFromFile() {
     //found d
     rewind(stdin);//TODO:check if correct this way
     int size = 50;
-    vecArray = malloc(sizeof(double*) * size); //init to size of size = 50 pointers
-    double *arr = malloc(sizeof(double) * d); // array of coordinates
+    vecArray = (double**)malloc(sizeof(double*) * size); //init to size of size = 50 pointers
+    double *arr = (double*)malloc(sizeof(double) * d); // array of coordinates
     int reached_end = 0; //"False"
 
     //Read vectors from file
     while (reached_end == 0) {
         if(n == size){
-            vecArray = realloc(vecArray, size*2*sizeof(double*));
+            assert(vecArray !=NULL);
+            //TODO: bug here:
+            double **p = realloc(vecArray, 2*size*sizeof(double*));
+            vecArray = p;
             size += size;
         }
         for (i = 0; i < d; i++) {
