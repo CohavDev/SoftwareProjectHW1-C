@@ -26,13 +26,10 @@ int reCalcMeans(Cluster *clusterArray,int length){
     int calcMean(Cluster *clust);
     int changed = 0; // "False"
     int i;
-    Cluster *t;
-    t = clusterArray;
     for(i = 0;i<length;i++){
-        if(calcMean(t) == 1){
+        if(calcMean(&(clusterArray[i])) == 1){
             changed = 1;
         }
-        t++;
     }
     return changed;
 }
@@ -46,13 +43,11 @@ int calcMean(Cluster *clust){
     sum = (*clust).sum;
     mean = (*clust).mean;
     for(i=0;i<(*clust).d;i++){
-        calcVal = (*sum / (*clust).count);
-        if(*mean == calcVal){
+        calcVal = (sum[i] / (*clust).count);
+        if(mean[i] != calcVal){
             changed = 1; //"True"
         }
-        *mean = calcVal;
-        mean++;
-        sum++;
+        mean[i] = calcVal;
     }
     return changed;
 }
@@ -63,8 +58,7 @@ void addVector(Cluster *clust, Vector *vec){
     sum = (*clust).sum;
     coordinates = (*vec).coordinates;
     for(i = 0;i<(*clust).d;i++){
-        *sum += *coordinates;
-        sum++;
+        sum[i] += *coordinates;
         coordinates++;
     }
     (*clust).count++;
@@ -100,12 +94,9 @@ void findCluster(Cluster *clusterArray, Vector *vec, int arrayLen){
 int main() {
     //test
     int *p = malloc(3*sizeof(int));
-    int *t;
     int i;
-    t = p;
     for(i=0;i<3;i++){
-        *t = 1+i;
-        t++;
+        p[i] = i+1;
     }
 
     printf("%d", p[1]);
@@ -135,7 +126,7 @@ int main() {
 
 //kMeans function
 void kMeans(int k, int maxIter ){
-    //TODO: Google when to declare functions (block below) and where
+    //TODO: Google when to declare functions (block below probably should be deleted) and where
     void printMeans(Cluster *clusterArray, int length);
     void initFromFile(int k, Cluster *clusterArray, Vector *vecArray);
     void findCluster(Cluster *clusterArray, Vector *vec, int arrayLen);
@@ -174,15 +165,10 @@ void kMeans(int k, int maxIter ){
 //output: squered distance between them
 //TODO: this works! :)
 double distance(double *x, double *y, int length){
-    double *a,*b;
     double sum = 0;
     int i;
-    a = x;
-    b = y;
     for(i=0; i<length;i++){
-        sum += (*a-*b)*(*a-*b);
-        a++;
-        b++;
+        sum += (x[i]-y[i])*(x[i]-y[i]);
     }
     return sum;
 }
@@ -205,41 +191,47 @@ void refreshClusters(Cluster *clusterArray, int clusterLength, int d){
         temp++;
     }
 }
+
 void initFromFile(int k, Cluster *clusterArray, Vector *vecArray){
     //TODO:this should initialize vectors and clusters arrays, NOT FINISHED
-    char *str = malloc(2 * sizeof(char));
-    int ch;
-    size_t size = 2;
-    size_t len = 0;
-    while((ch = getchar()) != EOF && ch != '\n'){
-        if(len == size-1){
-            str = realloc(str, 2 * size * sizeof(*str)); //double size
-            size += size;
+    int d = 0;
+    int n = 0;
+    char str;
+    double number;
+    const int LINE_MAX_LENGTH = 1000; // according to forum
+    int i;
+    for(i=0;i<LINE_MAX_LENGTH;i++){
+        scanf("%c",&str);
+        if(str == '\n' || str == EOF){
+            break; //reached end of line TODO:check if correct
         }
-        str[len] = (char)ch;//continue here
-        len++;
+        if(str == ','){
+            d++;
+        }
     }
-    str = realloc(str, sizeof(*str)*len);
+    rewind(stdin);//TODO:check if correct this way
+    scanf("%lf%c", &number, &str);
+    if(str == ','){
+        d++;
+        //TODO:continue from here
+    }
 
 }
 
 void printMeans(Cluster *clusterArray, int length){
     //TODO:didnt check
     int i, j, d;
-    Cluster *clust;
     double *temp;
-    clust = clusterArray;
-    d = (*clust).d;
+    d = clusterArray ->d;
     //loop through clusters
     for(i=0;i<length-1;i++){
-        temp = (*clust).mean;
+        temp = (clusterArray[i]).mean;
         //loop through mean array
         for(j=0;j<d;j++){
             printf("%.4f,", *temp);
             temp++;
         }
         printf("%.4f", *temp);
-        clust++;
     }
 }
 //deallocate memory
