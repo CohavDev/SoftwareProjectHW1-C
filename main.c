@@ -185,6 +185,7 @@ void initFromFile() {
     int i,j;
     for (i = 0; i < LINE_MAX_LENGTH; i++) { ;
         if (scanf("%lf%c", &number, &str) == EOF || str == '\n') {
+            d++;
             break; //reached end of line TODO:check if correct
         }
         if (str == ',') {
