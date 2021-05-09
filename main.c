@@ -4,7 +4,6 @@
 
 
 struct Cluster {
-    int d;
     int count;
     //pointers to arrays
     double *sum;
@@ -42,7 +41,6 @@ int main(int argc, char *argv[]) {
         maxIter = 200;//TODO:check default value instructions
     }
     kMeans(maxIter);
-    printf("finished !");//TODO: delete later
     return 0;
 }
 
@@ -69,8 +67,8 @@ int calcMean(Cluster *clust) {
     int changed = 0; //"False"
     double *sum, *mean; //pointers to sum and mean of clust
     double calcVal;
-    sum = (*clust).sum;
-    mean = (*clust).mean;
+    sum = clust->sum;
+    mean = clust->mean;
     for (i = 0; i < d; i++) {
         calcVal = (sum[i] / (*clust).count);
         if (mean[i] != calcVal) {
@@ -86,8 +84,8 @@ void addVector(Cluster *clust, double *vec) {
     int i;
     double *sum;
     sum = (*clust).sum;
-    for (i = 0; i < (*clust).d; i++) {
-        sum[i] += vec[i];
+    for (i = 0; i < d; i++) {
+        sum[i] = sum[i] + vec[i];
     }
     (*clust).count++;
 }
@@ -98,21 +96,19 @@ void addVector(Cluster *clust, double *vec) {
 void findCluster(double *vec) {
     //declarations
     int i;
-    Cluster *minCluster, *tempCluster;
+    Cluster *minCluster;
     double minDistance, tempDistance;
 
     //default minimum
-    minCluster = *clusterArray;
-    tempCluster = minCluster;
-    minDistance = distance(vec, (*minCluster).mean, (*minCluster).d);
+    minCluster = clusterArray[0];
+    minDistance = distance(vec, minCluster->mean, d);
 
     //loop through all clusters, except for 1st
     for (i = 1; i < k; i++) {
-        tempCluster++;
-        tempDistance = distance(vec, (*tempCluster).mean, (*tempCluster).d);
+        tempDistance = distance(vec, (clusterArray[i])->mean, d);
         if (tempDistance < minDistance) {
             minDistance = tempDistance;
-            minCluster = tempCluster;
+            minCluster = clusterArray[i];
         }
     }
     addVector(minCluster, vec);
@@ -122,19 +118,19 @@ void findCluster(double *vec) {
 void kMeans(int maxIter) {
     initFromFile(k, clusterArray, vecArray);
     int i, iterCount;
-    double *currentVec;
-    currentVec = *vecArray;
+//    double *currentVec;
+//    currentVec = *vecArray;
     int changed = 1;
     iterCount = 0;
     while (iterCount < maxIter && changed == 1) {
         //loop through vectors and insert to clusters
         for (i = 0; i < n; i++) {
-            findCluster(currentVec);
+            findCluster(vecArray[i]);
         }
         //recalcmeans returns 1 if mean changed, 0 otherwise
         changed = reCalcMeans(clusterArray, k);
         //init sum and count to zero's:
-        refreshClusters(clusterArray, k, (*clusterArray)->d);
+        refreshClusters(clusterArray, k, d);
         iterCount++;
     }
     printMeans(clusterArray, k);
@@ -188,7 +184,7 @@ void initFromFile() {
     }
     //found d
     rewind(stdin);//TODO:check if correct this way
-    int size = 25;
+    int size = 50;
     vecArray = malloc(sizeof(double*) * size); //init to size of size
     double *arr;
     int reached_end = 0; //"False"
@@ -208,9 +204,13 @@ void initFromFile() {
                 break;
             }
             arr[i] = number;
+
         }
-        n++;
-        vecArray[n-1] = arr;
+        if(reached_end != 1){
+            n++;
+            vecArray[n-1] = arr;
+        }
+
     }
     vecArray = realloc(vecArray, sizeof(double*) * n);
 
@@ -225,14 +225,13 @@ void initFromFile() {
             (cl->mean)[j] = vecArray[i][j];
             (cl->sum)[j] = vecArray[i][j];
         }
-        cl->count++;
+        cl->count = 1;
         clusterArray[i] = cl;
     }
 
 }
 
 void printMeans() {
-    //TODO:didnt check
     int i, j;
     double *temp;
     //loop through clusters
@@ -240,9 +239,9 @@ void printMeans() {
         temp = (clusterArray[i])->mean;
         //loop through mean array
         for (j = 0; j < d-1; j++) {
-            printf("%.4f,", temp[j]);
+            printf("%0.4lf,", temp[j]);
         }
-        printf("%.4f", temp[d]);
+        printf("%0.4lf\n", temp[d-1]);
     }
 }
 
