@@ -158,18 +158,12 @@ double distance(double *x, double *y, int length) {
 //output: None. All clusters sum and count is initalized to zero
 void refreshClusters() {
     int i, j;
-    Cluster *temp;
-    double *indexer;
-    temp = *clusterArray;
     for (i = 0; i < k; i++) {
-        (*temp).count = 0;
-        indexer = ((*temp).sum);
+        clusterArray[i]->count = 0;
         //loop through array of sum and init all to zero (0)
         for (j = 0; j < d; j++) {
-            *indexer = 0;
-            indexer++;
+            (clusterArray[i]->sum)[j] = 0;
         }
-        temp++;
     }
 }
 
@@ -194,18 +188,18 @@ void initFromFile() {
     }
     //found d
     rewind(stdin);//TODO:check if correct this way
-    int size = 50;
-    vecArray = (double**)malloc(sizeof(double*) * size); //init to size of size = 50 pointers
-    double *arr = (double*)malloc(sizeof(double) * d); // array of coordinates
+    int size = 25;
+    vecArray = malloc(sizeof(double*) * size); //init to size of size
+    double *arr;
     int reached_end = 0; //"False"
 
     //Read vectors from file
     while (reached_end == 0) {
+        arr  = malloc(sizeof(double) * d); // array of coordinates
         if(n == size){
-            assert(vecArray !=NULL);
             //TODO: bug here:
-            double **p = realloc(vecArray, 2*size*sizeof(double*));
-            vecArray = p;
+            vecArray = realloc(vecArray, (2*size*sizeof(double*)));
+            assert(vecArray !=NULL);
             size += size;
         }
         for (i = 0; i < d; i++) {
@@ -216,19 +210,23 @@ void initFromFile() {
             arr[i] = number;
         }
         n++;
-        vecArray[n] = arr;
+        vecArray[n-1] = arr;
     }
     vecArray = realloc(vecArray, sizeof(double*) * n);
 
     //init clusters
     clusterArray = (Cluster**)malloc(k * sizeof(Cluster*));
     for(i=0; i < k;i++){
-        Cluster cl;
+        Cluster *cl = malloc(sizeof(Cluster));
+        cl->mean = malloc(d*sizeof(double));
+        cl->sum = malloc(d*sizeof(double));
         //deep copy
         for(j=0;j<d;j++){
-             cl.mean[j] = vecArray[i][j];
+            (cl->mean)[j] = vecArray[i][j];
+            (cl->sum)[j] = vecArray[i][j];
         }
-        clusterArray[i] = &cl;
+        cl->count++;
+        clusterArray[i] = cl;
     }
 
 }
