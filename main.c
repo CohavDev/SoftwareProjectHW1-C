@@ -23,8 +23,8 @@ int reCalcMeans();
 int calcMean(Cluster *clust);
 void addVector(Cluster *clust, double *vec);
 void findCluster(double *vec);
-void kMeans(int maxIter);
-double distance(double *x, double *y, int length);
+void kMeans();
+double distance(double *x, double *y);
 void refreshClusters();
 void initFromFile();
 void printMeans();
@@ -32,15 +32,16 @@ void freeMem();
 
 /** main **/
 int main(int argc, char *argv[]) {
+    //TODO:validate cmd arguments
     assert(argc == 2 || argc == 3);
     k = atoi(argv[1]);
     if(argc == 3){
         maxIter = atoi(argv[2]);
     }
     else{
-        maxIter = 200;//TODO:check default value instructions
+        maxIter = 200; //default value
     }
-    kMeans(maxIter);
+    kMeans();
     return 0;
 }
 
@@ -48,7 +49,6 @@ int main(int argc, char *argv[]) {
 
 //input: Array of pointers of clusters and its length
 //output: None, calcs means of all clusters
-//TODO: didnt check correctness
 int reCalcMeans() {
     int changed = 0; // "False"
     int i;
@@ -101,11 +101,11 @@ void findCluster(double *vec) {
 
     //default minimum
     minCluster = clusterArray[0];
-    minDistance = distance(vec, minCluster->mean, d);
+    minDistance = distance(vec, minCluster->mean);
 
     //loop through all clusters, except for 1st
     for (i = 1; i < k; i++) {
-        tempDistance = distance(vec, (clusterArray[i])->mean, d);
+        tempDistance = distance(vec, (clusterArray[i])->mean);
         if (tempDistance < minDistance) {
             minDistance = tempDistance;
             minCluster = clusterArray[i];
@@ -115,11 +115,9 @@ void findCluster(double *vec) {
 }
 
 //kMeans function
-void kMeans(int maxIter) {
+void kMeans() {
     initFromFile(k, clusterArray, vecArray);
     int i, iterCount;
-//    double *currentVec;
-//    currentVec = *vecArray;
     int changed = 1;
     iterCount = 0;
     while (iterCount < maxIter && changed == 1) {
@@ -127,13 +125,11 @@ void kMeans(int maxIter) {
         for (i = 0; i < n; i++) {
             findCluster(vecArray[i]);
         }
-        //recalcmeans returns 1 if mean changed, 0 otherwise
-        changed = reCalcMeans(clusterArray, k);
-        //init sum and count to zero's:
-        refreshClusters(clusterArray, k, d);
+        changed = reCalcMeans(); //re-calculate means. returns 1 if mean changed, 0 otherwise
+        refreshClusters(); //init sum and count to zero's:
         iterCount++;
     }
-    printMeans(clusterArray, k);
+    printMeans();
     //TODO: continue from here
     freeMem(clusterArray, vecArray);
 }
@@ -141,10 +137,10 @@ void kMeans(int maxIter) {
 
 //input: 2 arrays(vectors coordinates)
 //output: squered distance between them
-double distance(double *x, double *y, int length) {
+double distance(double *x, double *y) {
     double sum = 0;
     int i;
-    for (i = 0; i < length; i++) {
+    for (i = 0; i < d; i++) {
         sum += (x[i] - y[i]) * (x[i] - y[i]);
     }
     return sum;
@@ -164,8 +160,6 @@ void refreshClusters() {
 }
 
 void initFromFile() {
-    //TODO:this should initialize vectors and clusters arrays, NOT FINISHED
-
     //find paramater d with first line
     d = 0;
     n = 0;
@@ -176,16 +170,17 @@ void initFromFile() {
     for (i = 0; i < LINE_MAX_LENGTH; i++) { ;
         if (scanf("%lf%c", &number, &str) == EOF || str == '\n') {
             d++;
-            break; //reached end of line TODO:check if correct
+            break;
         }
         if (str == ',') {
             d++;
         }
     }
-    //found d
-    rewind(stdin);//TODO:check if correct this way
+
+    rewind(stdin);
     int size = 50;
     vecArray = malloc(sizeof(double*) * size); //init to size of size
+    assert(vecArray !=NULL);
     double *arr;
     int reached_end = 0; //"False"
 
@@ -193,7 +188,6 @@ void initFromFile() {
     while (reached_end == 0) {
         arr  = malloc(sizeof(double) * d); // array of coordinates
         if(n == size){
-            //TODO: bug here:
             vecArray = realloc(vecArray, (2*size*sizeof(double*)));
             assert(vecArray !=NULL);
             size += size;
@@ -213,22 +207,23 @@ void initFromFile() {
 
     }
     vecArray = realloc(vecArray, sizeof(double*) * n);
+    assert(vecArray != NULL);
 
     //init clusters
-    clusterArray = (Cluster**)malloc(k * sizeof(Cluster*));
+    clusterArray = malloc(k * sizeof(Cluster*));
+    assert(clusterArray != NULL);
     for(i=0; i < k;i++){
         Cluster *cl = malloc(sizeof(Cluster));
         cl->mean = malloc(d*sizeof(double));
-        cl->sum = malloc(d*sizeof(double));
+        cl->sum = calloc(d,sizeof(double ));
+        assert(cl->sum !=NULL && cl->mean != NULL);
         //deep copy
         for(j=0;j<d;j++){
             (cl->mean)[j] = vecArray[i][j];
-            (cl->sum)[j] = vecArray[i][j];
         }
-        cl->count = 1;
+        cl->count = 0;
         clusterArray[i] = cl;
     }
-
 }
 
 void printMeans() {
